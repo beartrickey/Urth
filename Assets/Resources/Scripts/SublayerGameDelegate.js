@@ -114,7 +114,7 @@ function startGame()
 
 	var io : IncomingObject = getFreeIncomingObject();
 
-	io.onInit();
+	io.onInit( IncomingObject.TYPE_ASTEROID );
     
 }
 
@@ -177,14 +177,19 @@ function repositionObjectsOnPlanet()
 function incomingObjectHitPlanet( incomingObject : IncomingObject )
 {
 
-	planet.increaseRadius( 10.0 );
-
-	incomingObject.hitPlanet();
-
-	repositionObjectsOnPlanet();
+	if( incomingObject.type == IncomingObject.TYPE_ASTEROID )
+	{
+		planet.increaseRadius( 10.0 );
+		repositionObjectsOnPlanet();
+		incomingObject.deactivate();
+	}
+	else
+	{
+		incomingObject.stickToPlanet();	
+	}
 
 	var newIncomingObject : IncomingObject = getFreeIncomingObject();
-	newIncomingObject.onInit();
+	newIncomingObject.onInit( IncomingObject.TYPE_ASTEROID );
 
 }
 

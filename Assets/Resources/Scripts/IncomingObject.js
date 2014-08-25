@@ -4,6 +4,13 @@ public static var baseSpeed : float = 1.0;
 public static var startingDistance : float = 1000.0;
 public static var slgd : SublayerGameDelegate = null;
 
+public static var TYPE_ASTEROID : int = 0;
+public static var TYPE_ALIEN : int = 1;
+public static var TYPE_COLONIST : int = 2;
+public static var TYPE_WEAPON : int = 3;
+
+public var type : int = TYPE_ASTEROID;
+
 public var incomingAngle : float = 0.0; // Radians. From what angle is it heading towards the planet?
 public var angleOfAttachment : float = 0.0; // Radians. Where along perimeter of planet is this object attached?
 
@@ -14,10 +21,13 @@ public var isActive : boolean = false;
 
 public var stuckToPlanet : boolean = false;
 
+public var sprite : tk2dSprite = null;
+
 
 function onInstantiate()
 {
 	
+	sprite = gameObject.GetComponent( tk2dSprite );
 	slgd = SublayerGameDelegate.instance;
 	gameObject.SetActive( false );
 
@@ -25,7 +35,7 @@ function onInstantiate()
 
 
 
-function onInit()
+function onInit( type : int )
 {
 
 	//activate
@@ -36,6 +46,12 @@ function onInit()
 
 	stuckToPlanet = false;
 
+
+	//change texture based on type
+	if( type == TYPE_ASTEROID )
+		sprite.SetSprite( 'circle' );
+	else if( type == TYPE_ASTEROID )
+		sprite.SetSprite( 'triangle' );
 
 	// Random incoming angle
 	incomingAngle = Random.Range( 0.0, 6.28 );
@@ -102,6 +118,15 @@ function moveTowardPlanet()
 
 
 function hitPlanet()
+{
+
+	
+
+}
+
+
+
+function stickToPlanet()
 {
 
 	// Stick to planet
