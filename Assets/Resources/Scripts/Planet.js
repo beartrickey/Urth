@@ -23,7 +23,7 @@ function onInstantiate()
 
 
 
-function onInit( )
+function onInit()
 {
 
 	//randomly generate heights

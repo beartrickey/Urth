@@ -1,7 +1,7 @@
 ﻿#pragma strict
 
-public static var baseSpeed : float = 1.0;
-public static var startingDistance : float = 1000.0;
+public static var baseSpeed : float = 10.0;
+public static var startingDistance : float = 1500.0;
 public static var slgd : SublayerGameDelegate = null;
 
 public static var TYPE_ASTEROID : int = 0;
@@ -54,8 +54,11 @@ function onInit( type : int )
 		sprite.SetSprite( 'triangle' );
 
 	// Random incoming angle
-	incomingAngle = Random.Range( 0.0, 6.28 );
-
+	// incomingAngle = Random.Range( 0.0, 6.28 );
+	var fanArc : float = 0.785;  // The wider the fanArc, the more difficult the game gets. (Objects start coming from the side of the screen)
+	incomingAngle = Random.Range( -fanArc, fanArc );
+	if( incomingAngle < 0.0 )
+		incomingAngle += 6.28;
 
 	// Reset position
 	var xcomp : float = -Mathf.Sin( incomingAngle );
