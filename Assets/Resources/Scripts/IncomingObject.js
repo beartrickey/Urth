@@ -1,6 +1,6 @@
 ﻿#pragma strict
 
-public static var baseSpeed : float = 10.0;
+public static var baseSpeed : float = 5.0;
 public static var startingDistance : float = 1500.0;
 public static var slgd : SublayerGameDelegate = null;
 
@@ -35,7 +35,7 @@ function onInstantiate()
 
 
 
-function onInit( type : int )
+function onInit( _type : int )
 {
 
 	//activate
@@ -48,9 +48,12 @@ function onInit( type : int )
 
 
 	//change texture based on type
+	type = _type;
 	if( type == TYPE_ASTEROID )
 		sprite.SetSprite( 'circle' );
-	else if( type == TYPE_ASTEROID )
+	else if( type == TYPE_COLONIST )
+		sprite.SetSprite( 'rectangle' );
+	else if( type == TYPE_ALIEN )
 		sprite.SetSprite( 'triangle' );
 
 	// Random incoming angle
@@ -59,6 +62,11 @@ function onInit( type : int )
 	incomingAngle = Random.Range( -fanArc, fanArc );
 	if( incomingAngle < 0.0 )
 		incomingAngle += 6.28;
+
+
+	// Reset graphic rotation
+	gameObject.transform.eulerAngles.z = incomingAngle * Mathf.Rad2Deg;
+
 
 	// Reset position
 	var xcomp : float = -Mathf.Sin( incomingAngle );
@@ -129,17 +137,10 @@ function hitPlanet()
 
 
 
-function stickToPlanet()
+function setAngleOfAttachment() : float
 {
 
-	// Stick to planet
-	gameObject.transform.parent = slgd.planetCenter.transform;
-	stuckToPlanet = true;
-
-
-	// Figure out angle of attachment
 	var planetAngle : float = slgd.planetCenter.transform.eulerAngles.z * Mathf.Deg2Rad;
-	Debug.Log( 'planetAngle: ' + planetAngle );
 
 	angleOfAttachment = incomingAngle - planetAngle;
 
@@ -148,8 +149,17 @@ function stickToPlanet()
 	if( angleOfAttachment < 0.0 )
 		angleOfAttachment += 6.28;
 
-	Debug.Log( 'angleOfAttachment: ' + angleOfAttachment );
+}
 
+
+
+function stickToPlanet()
+{
+
+	// Stick to planet
+	gameObject.transform.parent = slgd.planetCenter.transform;
+	stuckToPlanet = true;
+	
 }
 
 

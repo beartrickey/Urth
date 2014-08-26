@@ -124,6 +124,23 @@ function startGame()
 
 
 
+function makeRandomIncomingObject() : IncomingObject
+{
+
+	var io : IncomingObject = getFreeIncomingObject();
+
+
+	// Randomly choose type
+	var randType : int = Random.Range( 0, 3 );
+
+	io.onInit( randType );
+
+	return io;
+
+}
+
+
+
 function updateIncomingObjects()
 {
 
@@ -170,6 +187,114 @@ function repositionObjectsOnPlanet()
 
 
 
+function incomingObjectCollisionCheck( incomingObject : IncomingObject )
+{
+
+	for( var i : int = 0; i < numIncomingObjects; i++ )
+	{
+
+		var planetSideObject : IncomingObject = incomingObjectList[i];
+
+
+		// Skip inactive objects
+		if( planetSideObject.isActive == false )
+			continue;
+
+
+		// Skip non-stuck objects
+		if( planetSideObject.stuckToPlanet == false )
+			continue;
+
+		var dif : float = planetSideObject.angleOfAttachment - incomingObject.angleOfAttachment;
+
+
+		// Is it closer clockwise or counter-clockwise?
+		if( dif < -3.14 )
+		{
+			dif += 6.28;
+		}
+		else if( dif > 3.14 )
+		{
+			dif -= 6.28;
+		}
+
+
+		// Were they close enough for a collision?
+		// TODO: dif needs to change dynamically with the increased surface area of the planet
+		var threshold : float = 0.5;  // This needs to be in actual planetSide distance units instead of radians
+		if( Mathf.Abs( dif ) < threshold )
+		{
+
+			handleCollision( incomingObject, planetSideObject );
+
+		}
+
+   	}
+
+}
+
+
+
+function handleCollision( incomingObject : IncomingObject, planetSideObject : IncomingObject )
+{
+
+	switch( incomingObject.type )
+	{
+
+		case IncomingObject.TYPE_ASTEROID:
+			handleAsteroidCollision( incomingObject, planetSideObject );
+			break;
+
+		case IncomingObject.TYPE_COLONIST:
+			handleColonistCollision( incomingObject, planetSideObject );
+			break;
+
+		case IncomingObject.TYPE_ALIEN:
+			handleAlienCollision( incomingObject, planetSideObject );
+			break;
+
+		default:
+			break;
+
+	}
+
+}
+
+
+
+function handleAsteroidCollision( incomingObject : IncomingObject, planetSideObject : IncomingObject )
+{
+
+	incomingObject.deactivate();
+
+	planetSideObject.deactivate();
+
+}
+
+
+
+function handleColonistCollision( incomingObject : IncomingObject, planetSideObject : IncomingObject )
+{
+
+	incomingObject.deactivate();
+
+	planetSideObject.deactivate();
+
+}
+
+
+
+function handleAlienCollision( incomingObject : IncomingObject, planetSideObject : IncomingObject )
+{
+
+	incomingObject.deactivate();
+
+	planetSideObject.deactivate();
+
+}
+
+
+
 /////////////////////////////////////EVENTS
 
 
@@ -177,19 +302,38 @@ function repositionObjectsOnPlanet()
 function incomingObjectHitPlanet( incomingObject : IncomingObject )
 {
 
-	if( incomingObject.type == IncomingObject.TYPE_ASTEROID )
+	// Set angle of attachment
+	incomingObject.setAngleOfAttachment();
+
+
+	// Check for collision with objects that are currently stuck to the planet
+	incomingObjectCollisionCheck( incomingObject );
+
+
+	// If no collision occured, do something
+	switch( incomingObject.type )
 	{
-		planet.increaseRadius( 10.0 );
-		repositionObjectsOnPlanet();
-		incomingObject.deactivate();
-	}
-	else
-	{
-		incomingObject.stickToPlanet();	
+
+		case IncomingObject.TYPE_ASTEROID:
+			planet.increaseRadius( 10.0 );
+			repositionObjectsOnPlanet();
+			incomingObject.deactivate();
+			break;
+
+		case IncomingObject.TYPE_COLONIST:
+			incomingObject.stickToPlanet();
+			break;
+
+		case IncomingObject.TYPE_ALIEN:
+			incomingObject.stickToPlanet();
+			break;
+
+		default:
+			break;
+
 	}
 
-	var newIncomingObject : IncomingObject = getFreeIncomingObject();
-	newIncomingObject.onInit( IncomingObject.TYPE_ASTEROID );
+	makeRandomIncomingObject();
 
 }
 
