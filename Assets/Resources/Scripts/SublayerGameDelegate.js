@@ -187,8 +187,9 @@ function repositionObjectsOnPlanet()
 
 
 
-function incomingObjectCollisionCheck( incomingObject : IncomingObject )
+function incomingObjectCollisionCheck( incomingObject : IncomingObject ) : boolean
 {
+	// Returns true if it hit something
 
 	for( var i : int = 0; i < numIncomingObjects; i++ )
 	{
@@ -226,10 +227,13 @@ function incomingObjectCollisionCheck( incomingObject : IncomingObject )
 		{
 
 			handleCollision( incomingObject, planetSideObject );
+			return true;
 
 		}
 
    	}
+
+   	return false;
 
 }
 
@@ -266,7 +270,6 @@ function handleAsteroidCollision( incomingObject : IncomingObject, planetSideObj
 {
 
 	incomingObject.deactivate();
-
 	planetSideObject.deactivate();
 
 }
@@ -276,9 +279,25 @@ function handleAsteroidCollision( incomingObject : IncomingObject, planetSideObj
 function handleColonistCollision( incomingObject : IncomingObject, planetSideObject : IncomingObject )
 {
 
-	incomingObject.deactivate();
+	switch( planetSideObject.type )
+	{
 
-	planetSideObject.deactivate();
+		case IncomingObject.TYPE_COLONIST:
+			//colony increases in size
+			incomingObject.deactivate();
+			planetSideObject.colonistComponent.level += 1;
+			planetSideObject.colonistComponent.arrangeVerts();
+			break;
+
+		case IncomingObject.TYPE_ALIEN:
+			//alien is OK, colonists die
+			incomingObject.deactivate();
+			break;
+
+		default:
+			break;
+
+	}
 
 }
 
@@ -287,9 +306,24 @@ function handleColonistCollision( incomingObject : IncomingObject, planetSideObj
 function handleAlienCollision( incomingObject : IncomingObject, planetSideObject : IncomingObject )
 {
 
-	incomingObject.deactivate();
+	switch( planetSideObject.type )
+	{
 
-	planetSideObject.deactivate();
+		case IncomingObject.TYPE_COLONIST:
+			//alien is OK, colonists die
+			planetSideObject.deactivate();
+			break;
+
+		case IncomingObject.TYPE_ALIEN:
+			//alien increases in speed
+			incomingObject.deactivate();
+			planetSideObject.alienDigSpeed += IncomingObject.alienBaseDigSpeed;
+			break;
+
+		default:
+			break;
+
+	}
 
 }
 
@@ -307,29 +341,34 @@ function incomingObjectHitPlanet( incomingObject : IncomingObject )
 
 
 	// Check for collision with objects that are currently stuck to the planet
-	incomingObjectCollisionCheck( incomingObject );
-
-
-	// If no collision occured, do something
-	switch( incomingObject.type )
+	if( incomingObjectCollisionCheck( incomingObject ) == false )
 	{
 
-		case IncomingObject.TYPE_ASTEROID:
-			planet.increaseRadius( 10.0 );
-			repositionObjectsOnPlanet();
-			incomingObject.deactivate();
-			break;
+		// If no collision occured, do something
+		switch( incomingObject.type )
+		{
 
-		case IncomingObject.TYPE_COLONIST:
-			incomingObject.stickToPlanet();
-			break;
+			case IncomingObject.TYPE_ASTEROID:
+				planet.increaseRadius( 10.0 );
+				repositionObjectsOnPlanet();
+				incomingObject.deactivate();
+				break;
 
-		case IncomingObject.TYPE_ALIEN:
-			incomingObject.stickToPlanet();
-			break;
+			case IncomingObject.TYPE_COLONIST:
+				incomingObject.stickToPlanet();
+				incomingObject.sprite.gameObject.SetActive( false );
+				incomingObject.colonistComponent.gameObject.SetActive( true );
+				incomingObject.colonistComponent.arrangeVerts();
+				break;
 
-		default:
-			break;
+			case IncomingObject.TYPE_ALIEN:
+				incomingObject.stickToPlanet();
+				break;
+
+			default:
+				break;
+
+		}
 
 	}
 
@@ -381,9 +420,6 @@ function updateSublayerGame()
 		planetCenter.transform.eulerAngles.z = orbitRotation;
 		
 	}
-
-
-	// planet.increaseRadius(0.01);
 
 	updateIncomingObjects();
 	

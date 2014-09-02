@@ -23,13 +23,19 @@ public var stuckToPlanet : boolean = false;
 
 public var sprite : tk2dSprite = null;
 
+public var colonistComponent : Colonist = null;
+
+public var alienDistanceFromSurface : float = 0.0; // If this becomes greater than planet radius, it's game over
+public static var alienBaseDigSpeed : float = 0.01;
+public var alienDigSpeed : float = alienBaseDigSpeed;
+
 
 function onInstantiate()
 {
-	
-	sprite = gameObject.GetComponent( tk2dSprite );
+
 	slgd = SublayerGameDelegate.instance;
 	gameObject.SetActive( false );
+	colonistComponent.onInstantiate();
 
 }
 
@@ -46,9 +52,16 @@ function onInit( _type : int )
 
 	stuckToPlanet = false;
 
+	// Alien vars
+	alienDistanceFromSurface = 0.0;
+	alienDigSpeed = alienBaseDigSpeed;
+
 
 	//change texture based on type
 	type = _type;
+
+	colonistComponent.gameObject.SetActive( false );
+	sprite.gameObject.SetActive( true );
 	if( type == TYPE_ASTEROID )
 		sprite.SetSprite( 'circle' );
 	else if( type == TYPE_COLONIST )
@@ -98,6 +111,13 @@ function updateIncomingObject()
 
 	// Move toward planet
 	moveTowardPlanet();
+
+
+	if( type == TYPE_ALIEN && stuckToPlanet == true )
+	{
+		alienDistanceFromSurface += alienDigSpeed;
+		repositionOnPlanet();
+	}
 
 }
 
@@ -159,6 +179,12 @@ function stickToPlanet()
 	// Stick to planet
 	gameObject.transform.parent = slgd.planetCenter.transform;
 	stuckToPlanet = true;
+
+
+	// Stick colonists orientation point to the middle of planet.
+	// Vertices will still be drawn on surface of planet.
+	if( type == TYPE_COLONIST )
+		gameObject.transform.localPosition = Vector3( 0.0, 0.0, gameObject.transform.localPosition.z );
 	
 }
 
@@ -167,10 +193,23 @@ function stickToPlanet()
 function repositionOnPlanet()
 {
 
-	var xcomp : float = -Mathf.Sin( angleOfAttachment );
-	var ycomp : float = Mathf.Cos( angleOfAttachment );
+	if( type == TYPE_COLONIST )
+	{
 
-	gameObject.transform.localPosition = Vector3( xcomp, ycomp, 0.0 ) * slgd.planet.radius;
+		colonistComponent.arrangeVerts();
+
+	}
+	else if( type == TYPE_ALIEN )
+	{
+
+		var xcomp : float = -Mathf.Sin( angleOfAttachment );
+		var ycomp : float = Mathf.Cos( angleOfAttachment );
+
+		var radius : float = slgd.planet.radius - alienDistanceFromSurface;
+
+		gameObject.transform.localPosition = Vector3( xcomp, ycomp, 0.0 ) * radius;
+
+	}
 
 }
 
